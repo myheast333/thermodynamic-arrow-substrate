@@ -1,0 +1,3 @@
+mkdir validation_data
+# 添加已公开的卫星时钟数据集链接
+echo "NASA GRACE clock comparison data: https://podaac.jpl.nasa.gov/dataset/GRACE_TIME_SERIES" > validation_data/README.md
