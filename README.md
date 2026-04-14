@@ -1,3 +1,8 @@
+![Validation Status](https://img.shields.io/badge/validation-ready_for_community_review-green)
+## How to Contribute
+1. Run `python clock_comparison.py` 
+2. Compare output with NASA GRACE data
+3. Report residuals at frequency 1.7e-4 Hz
 # Thermodynamic Arrow from a Discrete Substrate
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19537142.svg)](https://doi.org/10.5281/zenodo.19537142)
