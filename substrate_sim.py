@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 substrate_sim.py - Discrete Substrate Evolution Simulator
-
 Implements the core dynamics of Substrate Ontology:
 - Discrete lattice (2D for visualisation, can be extended to 3D)
 - Global refresh cycles
@@ -20,9 +19,9 @@ import argparse
 from typing import Tuple, Optional
 
 # Physical constants (symbolic values, actual numbers not critical for simulation)
-L_MIN = 1.0          # minimal spatial unit (arbitrary units)
-T_MIN = 1.0          # minimal time unit (refresh period)
-K_B = 1.0            # Boltzmann constant (set to 1 for simplicity)
+L_MIN = 1.0  # minimal spatial unit (arbitrary units)
+T_MIN = 1.0  # minimal time unit (refresh period)
+K_B = 1.0    # Boltzmann constant (set to 1 for simplicity)
 
 class SubstrateSimulator:
     """
@@ -46,7 +45,7 @@ class SubstrateSimulator:
         
         Args:
             nx, ny: grid dimensions
-            eta: propagation coefficient (0<eta<1) – how fast deficits spread
+            eta: propagation coefficient (0 < eta < 1) – how fast deficits spread
             kappa: coupling strength (for interactions with neighbours)
             sigma_xi: standard deviation of additive Gaussian noise
             b0: base brightness (background)
@@ -71,7 +70,7 @@ class SubstrateSimulator:
         # History of total deficit for entropy tracking
         self.total_deficit_history = []
         self.time_step = 0
-        
+    
     def compute_gradient(self) -> Tuple[np.ndarray, np.ndarray]:
         """
         Compute brightness gradient components (G_x, G_y).
@@ -91,15 +90,14 @@ class SubstrateSimulator:
         based on local gradient and random noise.
         
         Simplified equation:
-            p_d = exp( -beta * ( G_d + xi_d ) ) / Z
-        
+            p_d = exp(-beta * (G_d + xi_d)) / Z
         where G_d is the gradient component along direction d,
         xi_d is Gaussian noise.
         
         Args:
             idx, jdx: lattice coordinates
             Gx, Gy: gradient components at this point
-        
+            
         Returns:
             p: array of 4 probabilities (order: right, up, left, down)
         """
@@ -131,6 +129,7 @@ class SubstrateSimulator:
         
         For simplicity, we implement the linear deficit update rule:
             delta_new = (1-eta)*delta_old + eta * laplacian + kappa * B + noise
+        
         But to align with entropy increase, we also add a term that always creates
         positive deficit from gradient mismatch (simulating Axiom 3).
         
@@ -140,8 +139,8 @@ class SubstrateSimulator:
         # Laplacian of deficit field
         laplacian = 0.0
         cnt = 0
-        for di, dj in [(-1,0), (1,0), (0,-1), (0,1)]:
-            ni, nj = idx+di, jdx+dj
+        for di, dj in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            ni, nj = idx + di, jdx + dj
             if 0 <= ni < self.nx and 0 <= nj < self.ny:
                 laplacian += self.delta[ni, nj] - self.delta[idx, jdx]
                 cnt += 1
@@ -160,15 +159,15 @@ class SubstrateSimulator:
         
         # Update deficit: diffusion + coupling + noise + creation
         old_delta = self.delta[idx, jdx]
-        new_delta = (1 - self.eta) * old_delta + self.eta * laplacian \
-                    + self.kappa * self.B[idx, jdx] + noise + creation
+        new_delta = ((1 - self.eta) * old_delta + self.eta * laplacian +
+                     self.kappa * self.B[idx, jdx] + noise + creation)
         
-        # Ensure non‑negativity (deficit cannot be negative)
+        # Ensure non-negativity (deficit cannot be negative)
         new_delta = max(0.0, new_delta)
         self.delta[idx, jdx] = new_delta
         
         # Brightness update: each unit of deficit creation reduces brightness
-        # (as per deficit–brightness conversion)
+        # (as per deficit-brightness conversion)
         delta_bright = -creation
         self.B[idx, jdx] = max(0.1, self.B[idx, jdx] + delta_bright)
         
@@ -190,53 +189,52 @@ class SubstrateSimulator:
             # Compute gradients once per refresh
             Gx, Gy = self.compute_gradient()
             
-            total_created = 0.0
             # Update all cells (synchronous update)
-            new_delta = self.delta.copy()
-            new_B = self.B.copy()
+            new_delta = np.zeros_like(self.delta)
+            new_B = np.zeros_like(self.B)
+            
             for i in range(self.nx):
                 for j in range(self.ny):
                     # Compute deficit creation using current fields
-                    # We'll compute new_delta directly, but need to use current field
-                    creation = self.compute_creation(i, j, Gx, Gy)
-                    total_created += creation
+                    grad_mag = np.sqrt(Gx[i, j]**2 + Gy[i, j]**2)
+                    creation = 0.01 * grad_mag
                     
-                    # Diffusion term
+                    # Diffusion term (laplacian)
                     lap = 0.0
                     cnt = 0
-                    for di, dj in [(-1,0), (1,0), (0,-1), (0,1)]:
-                        ni, nj = i+di, j+dj
+                    for di, dj in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                        ni, nj = i + di, j + dj
                         if 0 <= ni < self.nx and 0 <= nj < self.ny:
                             lap += self.delta[ni, nj] - self.delta[i, j]
                             cnt += 1
                     if cnt > 0:
                         lap /= cnt
                     
+                    # Random noise
                     noise = np.random.normal(0, self.sigma_xi)
-                    grad_mag = np.sqrt(Gx[i, j]**2 + Gy[i, j]**2)
-                    creation2 = 0.01 * grad_mag
-                    new_delta[i, j] = (1 - self.eta) * self.delta[i, j] + self.eta * lap \
-                                      + self.kappa * self.B[i, j] + noise + creation2
+                    
+                    # Update deficit
+                    new_delta[i, j] = ((1 - self.eta) * self.delta[i, j] + 
+                                      self.eta * lap + 
+                                      self.kappa * self.B[i, j] + 
+                                      noise + creation)
                     new_delta[i, j] = max(0.0, new_delta[i, j])
                     
-                    # Brightness update
-                    new_B[i, j] = max(0.1, self.B[i, j] - creation2)
+                    # Update brightness
+                    new_B[i, j] = max(0.1, self.B[i, j] - creation)
             
             # Apply updates
             self.delta = new_delta
             self.B = new_B
+            
             # Update beta
             self.beta = 1.0 / (self.B + 1e-6)
             
+            # Record history
             self.time_step += 1
             if self.time_step % record_interval == 0:
                 total_deficit = np.sum(self.delta)
                 self.total_deficit_history.append(total_deficit)
-    
-    def compute_creation(self, i: int, j: int, Gx: np.ndarray, Gy: np.ndarray) -> float:
-        """Compute deficit creation at cell (i,j) based on gradient magnitude."""
-        grad_mag = np.sqrt(Gx[i, j]**2 + Gy[i, j]**2)
-        return 0.01 * grad_mag
     
     def get_total_deficit(self) -> float:
         """Return current total deficit sum."""
@@ -258,14 +256,14 @@ class SubstrateSimulator:
         ax1 = axes[0]
         ax2 = axes[1]
         
-        im1 = ax1.imshow(self.delta, cmap='hot', interpolation='nearest', vmin=0, vmax=None)
+        im1 = ax1.imshow(self.delta, cmap='hot', interpolation='nearest', vmin=0)
         ax1.set_title('Deficit Field')
         plt.colorbar(im1, ax=ax1)
         
         # Initial entropy plot
         total_def = [self.get_total_deficit()]
         ax2.set_xlim(0, steps)
-        ax2.set_ylim(0, max(1, total_def[0]*1.5))
+        ax2.set_ylim(0, max(1, total_def[0] * 1.5))
         line, = ax2.plot([0], total_def, 'b-')
         ax2.set_xlabel('Refresh Step')
         ax2.set_ylabel('Total Deficit (Entropy proxy)')
@@ -274,43 +272,48 @@ class SubstrateSimulator:
         def update(frame):
             # Evolve one step
             self.evolve(1)
+            
             # Update deficit image
             im1.set_data(self.delta)
             im1.set_clim(vmin=0, vmax=np.percentile(self.delta, 95))
+            
             # Update entropy line
             total_def.append(self.get_total_deficit())
             line.set_data(range(len(total_def)), total_def)
             ax2.relim()
             ax2.autoscale_view()
+            
             return [im1, line]
         
         ani = FuncAnimation(fig, update, frames=steps, interval=interval, blit=False)
         plt.tight_layout()
         plt.show()
         return ani
-
-
-def run_simulation_and_verify_second_law(nx=32, ny=32, steps=200):
-    """
-    Run a simulation and verify that total deficit does not decrease.
-    Print steps where deficit decreases (should never happen).
-    """
-    sim = SubstrateSimulator(nx=nx, ny=ny, eta=0.3, kappa=0.1, sigma_xi=0.05)
-    print("Initial total deficit:", sim.get_total_deficit())
     
-    prev_deficit = sim.get_total_deficit()
-    for step in range(1, steps+1):
-        sim.evolve(1)
-        curr_deficit = sim.get_total_deficit()
-        if curr_deficit < prev_deficit - 1e-8:
-            print(f"WARNING: Deficit decreased at step {step}: {prev_deficit:.6f} -> {curr_deficit:.6f}")
-        prev_deficit = curr_deficit
-        if step % 50 == 0:
-            print(f"Step {step}, total deficit = {curr_deficit:.4f}")
-    
-    print(f"Final total deficit: {sim.get_total_deficit():.4f}")
-    print("Entropy increased" if sim.get_total_deficit() > 1e-6 else "Check simulation params.")
-    return sim
+    def run_simulation_and_verify_second_law(self, nx=32, ny=32, steps=200):
+        """
+        Run a simulation and verify that total deficit does not decrease.
+        Print steps where deficit decreases (should never happen).
+        """
+        sim = SubstrateSimulator(nx=nx, ny=ny, eta=0.3, kappa=0.1, sigma_xi=0.05)
+        print("Initial total deficit: ", sim.get_total_deficit())
+        
+        prev_deficit = sim.get_total_deficit()
+        for step in range(1, steps + 1):
+            sim.evolve(1)
+            curr_deficit = sim.get_total_deficit()
+            
+            if curr_deficit < prev_deficit - 1e-8:
+                print(f"WARNING: Deficit decreased at step {step}: {prev_deficit:.6f} -> {curr_deficit:.6f}")
+            
+            prev_deficit = curr_deficit
+            
+            if step % 50 == 0:
+                print(f"Step {step}, total deficit = {curr_deficit:.4f}")
+        
+        print(f"Final total deficit: {sim.get_total_deficit():.4f}")
+        print("Entropy increased" if sim.get_total_deficit() > 1e-6 else "Check simulation params.")
+        return sim
 
 
 if __name__ == "__main__":
@@ -319,11 +322,16 @@ if __name__ == "__main__":
     parser.add_argument("--ny", type=int, default=32, help="Grid height")
     parser.add_argument("--steps", type=int, default=200, help="Number of refresh steps")
     parser.add_argument("--animate", action="store_true", help="Show animation")
+    
     args = parser.parse_args()
     
-    sim = run_simulation_and_verify_second_law(nx=args.nx, ny=args.ny, steps=args.steps)
+    # Create and run simulation
+    sim = SubstrateSimulator(nx=args.nx, ny=args.ny, eta=0.3, kappa=0.1, sigma_xi=0.05)
     
     if args.animate:
-        # Reset simulation for animation
-        sim2 = SubstrateSimulator(nx=args.nx, ny=args.ny, eta=0.3, kappa=0.1, sigma_xi=0.05)
-        sim2.animate_evolution(steps=100, interval=50)
+        # Show animation
+        sim.animate_evolution(steps=args.steps, interval=50)
+    else:
+        # Run verification
+        print("Running simulation and verifying Second Law...")
+        sim.run_simulation_and_verify_second_law(nx=args.nx, ny=args.ny, steps=args.steps)
