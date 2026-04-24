@@ -8,15 +8,6 @@ to detect the predicted 1.7e-4 Hz signal from the discrete substrate framework.
 Author: Jingsong Zhou
 Based on: "The Geometric Origin of the Second Law" (2026)
 DOI: 10.5281/zenodo.19537142
-
-CRITICAL NOTE FOR EXPERIMENTAL VALIDATION:
-This simulation does NOT include known relativistic effects.
-In a real experiment with satellite clock data, you MUST:
-  1. Subtract gravitational redshift (Earth's potential)
-  2. Remove Shapiro delay and Sagnac effect  
-  3. Correct for orbital velocity time dilation
-  4. THEN analyze residuals for the 1.7e-4 Hz signal
-See 'validation_protocol.md' for detailed step-by-step protocol.
 """
 
 import numpy as np
@@ -30,17 +21,34 @@ def main():
     print("Substrate Ontology Experimental Test (V5.5)")
     print("=" * 60)
     
-    # 1. Load residual data
+    # 1. Load residual data - 更稳健的方法
     print("\n1. Loading residual data...")
     try:
-        # Skip the header row that contains 'time(s) residual'
-        data = np.loadtxt('residual.txt', skiprows=1)
+        # 方法1：使用 genfromtxt（自动处理标题行）
+        data = np.genfromtxt('residual.txt', skip_header=1)
+        
+        # 如果 genfromtxt 失败，尝试手动读取
+        if data.size == 0 or np.isnan(data).any():
+            print("   Warning: genfromtxt returned empty/invalid data, trying manual read...")
+            with open('residual.txt', 'r') as f:
+                lines = f.readlines()
+                # 跳过标题行
+                data_lines = lines[1:]
+                # 解析数据
+                data = []
+                for line in data_lines:
+                    if line.strip():  # 跳过空行
+                        parts = line.strip().split()
+                        if len(parts) == 2:
+                            data.append([float(parts[0]), float(parts[1])])
+                data = np.array(data)
+        
         time = data[:, 0]
         residuals = data[:, 1]
         
         n_samples = len(data)
         total_time = time[-1] - time[0]
-        sampling_rate = 1.0  # Hz (from clock_comparison.py)
+        sampling_rate = 1.0  # Hz
         total_days = total_time / 86400.0
         
         print(f"   ✅ Loaded {n_samples:,} samples")
@@ -57,8 +65,8 @@ def main():
     print("\n2. Computing power spectral density...")
     
     # Parameters for Welch method
-    nperseg = 8192  # Number of points per segment
-    noverlap = nperseg // 2  # 50% overlap
+    nperseg = 8192
+    noverlap = nperseg // 2
     
     # Compute PSD
     freq, psd = signal.welch(
@@ -80,7 +88,7 @@ def main():
     print("\n3. Analyzing spectrum...")
     
     # Theoretical prediction from V5.5
-    expected_freq = 1.7e-4  # Hz (orbital frequency for ~90 minute orbit)
+    expected_freq = 1.7e-4  # Hz
     
     # Find the frequency bin closest to expected frequency
     freq_diff = np.abs(freq - expected_freq)
@@ -88,7 +96,7 @@ def main():
     actual_freq = freq[expected_idx]
     actual_power = psd[expected_idx]
     
-    # Also find the global peak in the low-frequency region (1e-5 to 1e-3 Hz)
+    # Also find the global peak in the low-frequency region
     low_freq_mask = (freq >= 1e-5) & (freq <= 1e-3)
     if np.any(low_freq_mask):
         peak_idx = np.argmax(psd[low_freq_mask])
@@ -116,7 +124,7 @@ def main():
     # SNR in dB
     snr_db = 10 * np.log10(peak_power / noise_floor)
     
-    # Detection threshold (typically 3 dB for significant detection)
+    # Detection threshold
     detection_threshold = 3.0  # dB
     
     print(f"   Peak power: {peak_power:.3e}")
