@@ -79,8 +79,8 @@ Please cite the original paper if you use this validation data or its concepts i
   year={2026},
   doi={10.5281/zenodo.19537142}
 }
-```
-### Contact
+
+Contact
 For any questions regarding this validation data or its interpretation:
 Author: Jingsong Zhou
 Email: mailto:myheast@gmail.com
@@ -88,3 +88,4 @@ Affiliation: Independent Researcher
 Version: 1.0
 Last Updated: April 2026
 Purpose: To illustrate the expected experimental signature of the Discrete Substrate framework. Real-world data is required for scientific confirmation.
+```
