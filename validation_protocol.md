@@ -118,17 +118,15 @@ plt.savefig('experimental_psd.png', dpi=150)
 plt.show()
 
 
-###Step 4: Statistical Significance Testing
+Step 4: Statistical Significance Testing
 To claim a detection, the peak must meet stringent statistical criteria:
-Frequency Match: The detected peak must be within 10% of the expected orbital frequency (i.e., |fdetected - forb| / forb ≤ 0.1).
-Signal-to-Noise Ratio (SNR): Calculate the SNR by dividing the peak PSD value by the median noise floor in a nearby frequency band (e.g., 1e-4 to 3e-4 Hz). SNR ≥ 3 is a minimum threshold.
-p-value: Perform a statistical test (e.g., based on the Chi-square distribution for Welch's PSD) to ensure the probability of the peak being a noise fluctuation is p ≤ 0.01.
-
-###Step 5: Multi-Day and Cross-Validation
-Persistence: The signal should be present consistently across multiple, non-overlapping segments of the data (e.g., weekly or monthly chunks).
-Orbital Correlation: For missions with variable orbits, the signal frequency should correlate with the actual, instantaneous orbital frequency.
-. Validation Criteria
-表格
+1.Frequency Match: The detected peak must be within 10% of the expected orbital frequency (i.e., |fdetected - forb| / forb ≤ 0.1).
+2.Signal-to-Noise Ratio (SNR): Calculate the SNR by dividing the peak PSD value by the median noise floor in a nearby frequency band (e.g., 1e-4 to 3e-4 Hz). SNR ≥ 3 is a minimum threshold.
+3.p-value: Perform a statistical test (e.g., based on the Chi-square distribution for Welch's PSD) to ensure the probability of the peak being a noise fluctuation is p ≤ 0.01.
+Step 5: Multi-Day and Cross-Validation
+Persistence: The signal should be present consistently across multiple, non-overlapping segments of the data (e.g., weekly or monthly chunks).
+Orbital Correlation: For missions with variable orbits, the signal frequency should correlate with the actual, instantaneous orbital frequency.
+5. Validation Criteria
 Criterion	Threshold	Method
 Primary: Frequency Match	Within 10% of forb	Peak detection in PSD
 Primary: Statistical Significance	p-value ≤ 0.01	Chi-square or equivalent test
@@ -136,24 +134,23 @@ Primary: Signal Persistence	Present in ≥ 3 independent data segments	Multi-seg
 Secondary: Amplitude Consistency	Matches theoretical scaling	Comparison with simulation (when available)
 Secondary: Orbital Correlation	fsignal tracks forb(t)	For variable-orbit missions
 A successful validation requires meeting all Primary criteria.
-. Reporting Guidelines
+6. Reporting Guidelines
 When submitting your results for community review (e.g., via a GitHub issue or scientific publication), please include:
-Mission Details: Name, clock types, data period, and orbital parameters.
-Data Processing: Description of all corrections applied (especially relativistic).
-Analysis Results: Detected frequency, SNR, p-value, and the PSD plot.
-Data & Code: Share your processed data and the exact analysis script used (if possible).
-. Expected Timeline & Feasibility
-Data Availability: The ACES mission is scheduled to provide the ideal dataset starting in 2026-2027.
-Analysis: Once data is available, the analysis outlined in this protocol can be completed within 1-2 weeks.
-Feasibility: The experiment leverages existing and planned space infrastructure, making it a realistic near-term test of a foundational theory of physics.
-. Contact
+Mission Details: Name, clock types, data period, and orbital parameters.
+Data Processing: Description of all corrections applied (especially relativistic).
+Analysis Results: Detected frequency, SNR, p-value, and the PSD plot.
+Data & Code: Share your processed data and the exact analysis script used (if possible).
+7. Expected Timeline & Feasibility
+Data Availability: The ACES mission is scheduled to provide the ideal dataset starting in 2026-2027.
+Analysis: Once data is available, the analysis outlined in this protocol can be completed within 1-2 weeks.
+Feasibility: The experiment leverages existing and planned space infrastructure, making it a realistic near-term test of a foundational theory of physics.
+8. Contact
 For questions regarding this validation protocol or the theoretical framework:
-Author: Jingsong Zhou
-Affiliation: Independent Researcher
-Email: mailto:myheast@gmail.com
+Author: Jingsong Zhou
+Affiliation: Independent Researcher
+Email: myheast@gmail.com
 Version: 1.0
 Last Updated: April 2026
 Compatible with: Discrete Substrate Framework V5.5
 DOI: 10.5281/zenodo.19537142
 This validation protocol represents a community-driven effort to empirically test a profound claim about the origin of time's arrow. Your contribution is vital to the scientific process.
-```
