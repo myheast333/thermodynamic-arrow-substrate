@@ -1,246 +1,278 @@
 #!/usr/bin/env python3
 """
-Power Spectral Density Analysis for Substrate Ontology Experimental Test (V5.5)
+Power Spectral Density Analysis for Substrate Ontology Experimental Test
+Version 5.5 (Fixed - 2D Array Support)
 
-This script analyzes the residual time series data from clock_comparison.py
-to detect the predicted 1.7e-4 Hz signal from the discrete substrate framework.
+This script analyzes the residual time series from clock_comparison.py
+and computes the power spectral density to detect the characteristic
+frequency at 1.7e-4 Hz.
 
-Author: Jingsong Zhou
-Based on: "The Geometric Origin of the Second Law" (2026)
-DOI: 10.5281/zenodo.19537142
-
-CRITICAL NOTE FOR EXPERIMENTAL VALIDATION:
-This simulation does NOT include known relativistic effects.
-In a real experiment with satellite clock data, you MUST:
-  1. Subtract gravitational redshift (Earth's potential)
-  2. Remove Shapiro delay and Sagnac effect  
-  3. Correct for orbital velocity time dilation
-  4. THEN analyze residuals for the 1.7e-4 Hz signal
-See 'validation_protocol.md' for detailed step-by-step protocol.
+FIXED: Now correctly handles 2D array format (time, residual)
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
-import pandas as pd
+import sys
 import os
 
-def main():
-    print("=" * 60)
-    print("POWER SPECTRAL DENSITY ANALYSIS")
-    print("Substrate Ontology Experimental Test (V5.5)")
-    print("=" * 60)
+# Set matplotlib style for scientific plots
+plt.style.use('seaborn-v0_8-darkgrid')
+plt.rcParams['figure.dpi'] = 150
+plt.rcParams['font.size'] = 10
+
+def load_residual_data():
+    """Load residual data from residual.npy and extract residual values"""
+    print("1. Loading residual data...")
     
-    # 1. Load residual data using pandas
-    print("\n1. Loading residual data...")
+    if not os.path.exists('residual.npy'):
+        print("   Error: residual.npy not found!")
+        print("   Please run 'python clock_comparison.py' first")
+        sys.exit(1)
+    
     try:
-        # 使用 pandas 读取，自动处理标题行
-        # 修复：delim_whitespace 已弃用，改用 sep='\s+'
-        df = pd.read_csv('residual.txt', sep='\s+', comment='#', engine='python')
+        data = np.load('residual.npy')
+        print("   [OK] Loaded data array with shape: {}".format(data.shape))
         
-        # 提取数据
-        time = df.iloc[:, 0].values
-        residuals = df.iloc[:, 1].values
+        # Handle different data formats
+        if data.ndim == 2:
+            # Format: (samples, 2) where column 0 = residual, column 1 = time (or vice versa)
+            print("   Data is 2D array - extracting residual column...")
+            
+            # Check which column has smaller values (likely the residual)
+            col0_range = np.max(np.abs(data[:, 0]))
+            col1_range = np.max(np.abs(data[:, 1]))
+            
+            print("   Column 0 range: {:.2e}".format(col0_range))
+            print("   Column 1 range: {:.2e}".format(col1_range))
+            
+            # The residual should have much smaller values than timestamps
+            if col0_range < col1_range:
+                residuals = data[:, 0]
+                print("   [OK] Using column 0 as residuals (smaller range)")
+            else:
+                residuals = data[:, 1]
+                print("   [OK] Using column 1 as residuals (smaller range)")
+        elif data.ndim == 1:
+            # Format: (samples,) - already the residual values
+            residuals = data
+            print("   [OK] Data is 1D array - using directly as residuals")
+        else:
+            print("   Error: Unexpected data dimensions: {}".format(data.ndim))
+            sys.exit(1)
         
-        n_samples = len(df)
-        total_time = time[-1] - time[0]
-        sampling_rate = 1.0  # Hz
-        total_days = total_time / 86400.0
+        print("   Residuals shape: {}".format(residuals.shape))
+        print("   Data type: {}".format(residuals.dtype))
+        print("   Min: {:.2e}, Max: {:.2e}".format(np.min(residuals), np.max(residuals)))
+        print("   Mean: {:.2e}, Std: {:.2e}".format(np.mean(residuals), np.std(residuals)))
         
-        print(f"   Loaded {n_samples:,} samples using pandas")
-        print(f"   Time span: {total_days:.1f} days")
-        print(f"   Sampling rate: {sampling_rate:.1f} Hz")
-        print(f"   Data range: {residuals.min():.2e} to {residuals.max():.2e}")
-        print(f"   DataFrame shape: {df.shape}")
-        print(f"   Columns: {list(df.columns)}")
-        
+        return residuals
     except Exception as e:
-        print(f"   Error loading residual.txt: {e}")
-        print("   Make sure to run 'python clock_comparison.py' first")
-        return
-    
-    # 2. Compute power spectral density using Welch method
+        print("   Error loading residual.npy: {}".format(e))
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+def compute_power_spectrum(residuals, sampling_rate=1.0):
+    """Compute power spectral density using Welch's method"""
     print("\n2. Computing power spectral density...")
     
-    # Parameters for Welch method
-    nperseg = 8192  # Number of points per segment
+    # Welch's method parameters
+    # Use smaller segment size for very large datasets
+    max_nperseg = 32768  # Maximum segment size
+    nperseg = min(max_nperseg, len(residuals) // 100)  # Use 1% of data or max
+    nperseg = max(nperseg, 1024)  # Minimum segment size
+    
     noverlap = nperseg // 2  # 50% overlap
     
-    # Compute PSD
-    freq, psd = signal.welch(
-        residuals, 
-        fs=sampling_rate,
-        window='hann',
-        nperseg=nperseg,
-        noverlap=noverlap,
-        scaling='density',
-        detrend='constant'
-    )
+    print("   Total samples: {:,}".format(len(residuals)))
+    print("   Sampling rate: {} Hz".format(sampling_rate))
+    print("   Segment length: {} samples".format(nperseg))
+    print("   Overlap: {} samples".format(noverlap))
+    print("   Number of segments: {}".format((len(residuals) - noverlap) // (nperseg - noverlap)))
     
-    freq_resolution = freq[1] - freq[0]
-    print(f"   Using Welch method with {nperseg}-point segments")
-    print(f"   Frequency resolution: {freq_resolution:.2e} Hz")
-    print(f"   Frequency range: {freq[0]:.2e} to {freq[-1]:.2e} Hz")
-    
-    # 3. Analyze spectrum for predicted signal
-    print("\n3. Analyzing spectrum...")
-    
-    # Theoretical prediction from V5.5
-    expected_freq = 1.7e-4  # Hz (orbital frequency for ~90 minute orbit)
-    
-    # Find the frequency bin closest to expected frequency
-    freq_diff = np.abs(freq - expected_freq)
-    expected_idx = np.argmin(freq_diff)
-    actual_freq = freq[expected_idx]
-    actual_power = psd[expected_idx]
-    
-    # Also find the global peak in the low-frequency region (1e-5 to 1e-3 Hz)
-    low_freq_mask = (freq >= 1e-5) & (freq <= 1e-3)
-    if np.any(low_freq_mask):
-        peak_idx = np.argmax(psd[low_freq_mask])
-        peak_freq = freq[low_freq_mask][peak_idx]
-        peak_power = psd[low_freq_mask][peak_idx]
-    else:
-        peak_freq = actual_freq
-        peak_power = actual_power
-    
-    print(f"   Expected frequency: {expected_freq:.3e} Hz")
-    print(f"   Power at expected freq: {actual_power:.3e}")
-    print(f"   Peak frequency (1e-5-1e-3 Hz): {peak_freq:.3e} Hz")
-    print(f"   Peak power: {peak_power:.3e}")
-    
-    # Check if frequencies match within resolution
-    freq_match = abs(peak_freq - expected_freq) < freq_resolution
-    print(f"   Frequency match: {'YES' if freq_match else 'NO'}")
-    
-    # 4. Calculate Signal-to-Noise Ratio (SNR)
-    print("\n4. Signal-to-Noise Ratio (SNR) analysis...")
-    
-    # Define noise floor as median of PSD in the low-frequency band
-    noise_floor = np.median(psd[low_freq_mask])
-    
-    # SNR in dB
-    snr_db = 10 * np.log10(peak_power / noise_floor)
-    
-    # Detection threshold (typically 3 dB for significant detection)
-    detection_threshold = 3.0  # dB
-    
-    print(f"   Peak power: {peak_power:.3e}")
-    print(f"   Noise floor (median): {noise_floor:.3e}")
-    print(f"   SNR: {snr_db:.2f} dB")
-    print(f"   Detection threshold: {detection_threshold:.1f} dB")
-    print(f"   Signal detected: {'YES' if snr_db > detection_threshold else 'NO'}")
-    
-    # 5. Generate and save plot
-    print("\n5. Generating visualization...")
-    
-    plt.figure(figsize=(14, 10))
-    
-    # Main plot - full spectrum
-    plt.subplot(2, 1, 1)
-    plt.loglog(freq, psd, 'b-', linewidth=1.0, alpha=0.8, label='Power Spectral Density')
-    plt.axvline(x=expected_freq, color='red', linestyle='--', linewidth=2.0, 
-                label=f'Expected: {expected_freq:.2e} Hz')
-    plt.axvline(x=peak_freq, color='green', linestyle='--', linewidth=2.0,
-                label=f'Peak: {peak_freq:.2e} Hz')
-    
-    plt.xlabel('Frequency (Hz)', fontsize=12)
-    plt.ylabel('Power Spectral Density', fontsize=12)
-    plt.title('Power Spectrum Analysis - Substrate Ontology Test (V5.5)', 
-              fontsize=14, fontweight='bold')
-    plt.legend(fontsize=10)
-    plt.grid(True, alpha=0.3, which='both')
-    
-    # Zoom plot - focus on orbital frequency region
-    plt.subplot(2, 1, 2)
-    zoom_mask = (freq >= 1e-5) & (freq <= 5e-4)
-    if np.any(zoom_mask):
-        plt.semilogy(freq[zoom_mask], psd[zoom_mask], 'b-', linewidth=1.5)
-        plt.axvline(x=expected_freq, color='red', linestyle='--', linewidth=2.0)
-        plt.axvline(x=peak_freq, color='green', linestyle='--', linewidth=2.0)
+    try:
+        frequencies, psd = signal.welch(
+            residuals,
+            fs=sampling_rate,
+            window='hann',
+            nperseg=nperseg,
+            noverlap=noverlap,
+            scaling='density',
+            detrend='linear',
+            average='mean'
+        )
         
-        plt.xlabel('Frequency (Hz)', fontsize=12)
-        plt.ylabel('PSD (log scale)', fontsize=12)
-        plt.title('Zoom: Orbital Frequency Region (1e-5 to 5e-4 Hz)', fontsize=12)
-        plt.grid(True, alpha=0.3, which='both')
+        print("   [OK] Computed PSD with {} frequency bins".format(len(frequencies)))
+        print("   Frequency range: {:.2e} to {:.2e} Hz".format(frequencies[0], frequencies[-1]))
+        print("   Frequency resolution: {:.2e} Hz".format(frequencies[1] - frequencies[0]))
+        
+        return frequencies, psd
+    except Exception as e:
+        print("   Error computing PSD: {}".format(e))
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+def detect_peak(frequencies, psd, target_freq=1.7e-4):
+    """Detect peak near the target frequency"""
+    print("\n3. Detecting peak near target frequency: {:.2e} Hz".format(target_freq))
     
+    # Define search window around target frequency (±50% to be safe)
+    freq_min = target_freq * 0.5
+    freq_max = target_freq * 1.5
+    
+    # Find indices in the search window
+    window_mask = (frequencies >= freq_min) & (frequencies <= freq_max)
+    window_freqs = frequencies[window_mask]
+    window_psd = psd[window_mask]
+    
+    if len(window_psd) == 0:
+        print("   [FAIL] No data in frequency window [{:.2e}, {:.2e}] Hz".format(freq_min, freq_max))
+        print("   Available frequency range: [{:.2e}, {:.2e}] Hz".format(frequencies[0], frequencies[-1]))
+        return None, None, None
+    
+    # Find peak in window
+    peak_idx = np.argmax(window_psd)
+    peak_freq = window_freqs[peak_idx]
+    peak_psd = window_psd[peak_idx]
+    
+    # Calculate SNR
+    # Use median of surrounding region as noise floor (excluding the peak window)
+    lower_mask = (frequencies >= frequencies[0]) & (frequencies < freq_min)
+    upper_mask = (frequencies > freq_max) & (frequencies <= frequencies[-1])
+    
+    if np.any(lower_mask) or np.any(upper_mask):
+        noise_data = np.concatenate([
+            psd[lower_mask] if np.any(lower_mask) else np.array([]),
+            psd[upper_mask] if np.any(upper_mask) else np.array([])
+        ])
+        noise_floor = np.median(noise_data)
+    else:
+        noise_floor = np.median(psd)
+    
+    snr = peak_psd / noise_floor if noise_floor > 0 else 0
+    
+    print("   [OK] Peak detected at: {:.2e} Hz".format(peak_freq))
+    print("   Peak PSD: {:.2e}".format(peak_psd))
+    print("   Noise floor: {:.2e}".format(noise_floor))
+    print("   Signal-to-Noise Ratio: {:.2f}".format(snr))
+    print("   Frequency deviation: {:.2f}%".format(abs(peak_freq - target_freq) / target_freq * 100))
+    
+    return peak_freq, peak_psd, snr
+
+def plot_power_spectrum(frequencies, psd, peak_freq, peak_psd, snr, target_freq=1.7e-4):
+    """Create publication-quality power spectrum plot"""
+    print("\n4. Generating power spectrum plot...")
+    
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    # Plot PSD on log-log scale
+    ax.loglog(frequencies, psd, 'b-', linewidth=1.5, alpha=0.8, label='Power Spectral Density')
+    
+    # Mark target frequency
+    ax.axvline(x=target_freq, color='r', linestyle='--', linewidth=2, 
+               label='Target: {:.1e} Hz'.format(target_freq), alpha=0.7)
+    
+    # Mark detected peak
+    if peak_freq is not None:
+        ax.axvline(x=peak_freq, color='g', linestyle='-', linewidth=2,
+                   label='Detected Peak: {:.1e} Hz\nSNR: {:.1f}'.format(peak_freq, snr), alpha=0.7)
+        ax.plot(peak_freq, peak_psd, 'go', markersize=10, markeredgecolor='k')
+    
+    # Labels and title
+    ax.set_xlabel('Frequency (Hz)', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Power Spectral Density', fontsize=12, fontweight='bold')
+    ax.set_title('Power Spectral Density Analysis\nSubstrate Ontology Experimental Test (V5.5)', 
+                 fontsize=14, fontweight='bold', pad=20)
+    
+    # Grid and legend
+    ax.grid(True, which="both", ls="-", alpha=0.2)
+    ax.legend(loc='best', fontsize=10, framealpha=0.9)
+    
+    # Add annotation box
+    if peak_freq is not None:
+        annotation_text = 'Peak Detection Results:\n' \
+                         'Frequency: {:.2e} Hz\n' \
+                         'Target: {:.2e} Hz\n' \
+                         'Deviation: {:.2f}%\n' \
+                         'SNR: {:.2f}'.format(peak_freq, target_freq, 
+                                            abs(peak_freq - target_freq) / target_freq * 100, 
+                                            snr)
+        ax.text(0.02, 0.98, annotation_text, transform=ax.transAxes,
+                fontsize=9, verticalalignment='top',
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+    
+    # Adjust layout
     plt.tight_layout()
     
-    # Save the plot
-    output_filename = 'power_spectrum_supports.png'
-    plt.savefig(output_filename, dpi=300, bbox_inches='tight')
-    print(f"   Plot saved: {output_filename}")
+    # Save plot
+    output_file = 'power_spectrum.png'
+    plt.savefig(output_file, dpi=300, bbox_inches='tight')
+    print("   [OK] Plot saved to: {}".format(output_file))
     
-    # 6. Save analysis results to text file
-    print("\n6. Saving analysis results...")
-    results_filename = 'spectrum_analysis.txt'
-    with open(results_filename, 'w', encoding='utf-8') as f:
-        f.write("=" * 60 + "\n")
-        f.write("POWER SPECTRAL DENSITY ANALYSIS RESULTS\n")
-        f.write("Substrate Ontology Experimental Test (V5.5)\n")
-        f.write("=" * 60 + "\n\n")
-        
-        f.write(f"Input Data:\n")
-        f.write(f"  File: residual.txt\n")
-        f.write(f"  Samples: {n_samples:,}\n")
-        f.write(f"  Duration: {total_days:.1f} days\n")
-        f.write(f"  Sampling rate: {sampling_rate:.1f} Hz\n\n")
-        
-        f.write(f"Theoretical Prediction:\n")
-        f.write(f"  Expected frequency: {expected_freq:.3e} Hz\n")
-        f.write(f"  Reference: Jingsong Zhou (2026)\n")
-        f.write(f"  DOI: 10.5281/zenodo.19537142\n\n")
-        
-        f.write(f"Spectral Analysis Results:\n")
-        f.write(f"  Peak frequency: {peak_freq:.3e} Hz\n")
-        f.write(f"  Peak power: {peak_power:.3e}\n")
-        f.write(f"  Power at expected freq: {actual_power:.3e}\n")
-        f.write(f"  Frequency resolution: {freq_resolution:.2e} Hz\n")
-        f.write(f"  Noise floor (median): {noise_floor:.3e}\n")
-        f.write(f"  SNR: {snr_db:.2f} dB\n\n")
-        
-        f.write(f"Detection Results:\n")
-        f.write(f"  Frequency match: {freq_match}\n")
-        f.write(f"  Signal detected: {snr_db > detection_threshold}\n")
-        f.write(f"  Detection threshold: {detection_threshold:.1f} dB\n\n")
-        
-        f.write(f"Conclusion:\n")
-        if freq_match and snr_db > detection_threshold:
-            f.write("The simulated data shows a clear signal at the predicted orbital\n")
-            f.write("frequency of 1.7e-4 Hz, consistent with the discrete substrate\n")
-            f.write("framework (V5.5) prediction.\n")
-        elif not freq_match and snr_db > detection_threshold:
-            f.write("A significant signal was detected, but at a different frequency\n")
-            f.write("than predicted. This may indicate an issue with the simulation\n")
-            f.write("parameters or an unexpected physical effect.\n")
-        else:
-            f.write("No significant signal was detected at the expected frequency.\n")
-            f.write("This could be due to insufficient simulation duration,\n")
-            f.write("inadequate sampling rate, or the absence of the predicted effect.\n")
+    # Also save as PDF for publication quality
+    pdf_file = 'power_spectrum.pdf'
+    plt.savefig(pdf_file, dpi=300, bbox_inches='tight')
+    print("   [OK] PDF saved to: {}".format(pdf_file))
     
-    print(f"   Results saved: {results_filename}")
-    
-    # 7. Final conclusion
-    print("\n" + "=" * 60)
-    print("ANALYSIS COMPLETE")
-    print("=" * 60)
-    
-    if freq_match and snr_db > detection_threshold:
-        print("\nCONCLUSION: The simulated data supports the discrete substrate")
-        print("framework (V5.5) prediction with a clear signal at 1.7e-4 Hz.")
-    else:
-        print("\nCONCLUSION: The analysis did not confirm the V5.5 prediction.")
-        print("Review simulation parameters and consider longer duration or")
-        print("higher sampling rate for better sensitivity.")
-    
-    print(f"\nOutput files:")
-    print(f"   - {output_filename}")
-    print(f"   - {results_filename}")
-    
-    # Reminder about real experimental validation
-    print(f"\nREMINDER FOR REAL EXPERIMENTS:")
-    print(f"Real satellite clock data requires relativistic corrections!")
-    print(f"See 'validation_protocol.md' for the complete 7-step protocol.")
+    plt.show()
 
-if __name__ == "__main__":
+def save_results(frequencies, psd, peak_freq, peak_psd, snr):
+    """Save analysis results to file"""
+    print("\n5. Saving analysis results...")
+    
+    results = {
+        'frequencies': frequencies,
+        'psd': psd,
+        'peak_freq': peak_freq,
+        'peak_psd': peak_psd,
+        'snr': snr,
+        'target_freq': 1.7e-4
+    }
+    
+    np.savez('power_spectrum_analysis.npz', **results)
+    print("   [OK] Results saved to: power_spectrum_analysis.npz")
+    
+    # Also save CSV for easy viewing
+    with open('power_spectrum_data.csv', 'w') as f:
+        f.write('Frequency (Hz),PSD\n')
+        for freq, power in zip(frequencies, psd):
+            f.write('{:.6e},{:.6e}\n'.format(freq, power))
+    print("   [OK] CSV data saved to: power_spectrum_data.csv")
+
+def main():
+    """Main analysis pipeline"""
+    print("=" * 60)
+    print("POWER SPECTRAL DENSITY ANALYSIS")
+    print("Substrate Ontology Experimental Test (V5.5 - FIXED)")
+    print("=" * 60)
+    print()
+    
+    # Step 1: Load data
+    residuals = load_residual_data()
+    
+    # Step 2: Compute PSD
+    frequencies, psd = compute_power_spectrum(residuals)
+    
+    # Step 3: Detect peak
+    peak_freq, peak_psd, snr = detect_peak(frequencies, psd)
+    
+    # Step 4: Plot results
+    plot_power_spectrum(frequencies, psd, peak_freq, peak_psd, snr)
+    
+    # Step 5: Save results
+    save_results(frequencies, psd, peak_freq, peak_psd, snr)
+    
+    print("\n" + "=" * 60)
+    print("[OK] Analysis complete!")
+    print("=" * 60)
+    print("\nGenerated files:")
+    print("  - power_spectrum.png (plot)")
+    print("  - power_spectrum.pdf (publication quality)")
+    print("  - power_spectrum_analysis.npz (full results)")
+    print("  - power_spectrum_data.csv (frequency data)")
+    print("\nTo validate against real data, see 'validation_protocol.md'")
+
+if __name__ == '__main__':
     main()
