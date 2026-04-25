@@ -1,354 +1,118 @@
-# 📋 **validation_protocol.md**
+# 🔬 Experimental Validation Protocol: The Geometric Origin of the Second Law
 
-```markdown
-# 🔬 Experimental Validation Protocol: Discrete Substrate Thermodynamic Arrow
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19537142.svg)](https://doi.org/10.5281/zenodo.19537142)
 
 ## 1. Overview
 
-This validation protocol provides a step-by-step guide for experimental laboratories to test the key prediction of the discrete substrate theory: **a residual periodic signal at 1.7×10⁻⁴ Hz in atomic clock comparisons between ground and space-based clocks**.
+This protocol provides a standardized, step-by-step guide for experimental physics laboratories to test the central, falsifiable prediction of the discrete substrate framework presented in the paper:
 
-The protocol is designed to be reproducible, standardized, and compatible with existing satellite timing data (particularly NASA GRACE mission data).
+> **"The Geometric Origin of the Second Law: Irreducible Informational Differences in a Discrete Substrate"**  
+> Jingsong Zhou (2026)
+
+The core prediction is that **high-precision comparisons between a ground-based atomic clock and a satellite-borne atomic clock will reveal an irreducible residual periodic signal at the satellite's orbital frequency (f<sub>orb</sub> ≈ 1.7 × 10<sup>-4</sup> Hz).** This signal arises from the intrinsic symmetry breaking of continuous rotations on a discrete substrate during periodic motion.
+
+This protocol is designed to be reproducible, compatible with existing and upcoming space missions (e.g., ACES), and to facilitate community-driven scientific validation.
 
 ## 2. Theoretical Prediction Summary
 
 ### 2.1 Core Prediction
-- **Frequency**: 1.7 × 10⁻⁴ Hz (orbital frequency of typical LEO satellites)
-- **Physical Origin**: Discrete sampling of the substrate's global refresh rate by orbiting clocks
-- **Signal Type**: Irreducible residual in time comparison measurements
-- **Amplitude Range**: ~10⁻¹⁹ seconds (relative time deviation)
+- **Frequency**: **f<sub>orb</sub> = 1 / T<sub>orb</sub> ≈ 1.7 × 10<sup>-4</sup> Hz**
+    - Where T<sub>orb</sub> is the orbital period of the satellite (~90 minutes for Low Earth Orbit).
+- **Physical Origin**: The discrete substrate cannot perfectly realize the continuous rotational symmetry of the satellite's orbit. This "closure informational difference" manifests as a persistent modulation in the clock's sampling of the substrate's fundamental update rate.
+- **Signal Type**: An irreducible residual in the fractional frequency comparison data (y(t) = (ν<sub>S</sub> - ν<sub>G</sub>) / ν<sub>G</sub>).
+- **Expected Amplitude**: Δy ∼ τ<sub>min</sub> / τ<sub>clock</sub> ≈ 10<sup>-29</sup>. While this amplitude is below current single-shot sensitivity, it is detectable through long-term integration (months to years) of high-stability clock data.
 
-### 2.2 Why This Frequency?
-- Low Earth Orbit (LEO) satellites have orbital periods of ~97 minutes
-- Orbital frequency = 1/(97 × 60) ≈ 1.7 × 10⁻⁴ Hz
-- The discrete substrate creates a global refresh cycle that is periodically sampled by the orbiting clock
-- This sampling creates a persistent, irreducible residual signal
+### 2.2 Why This Test is Falsifiable
+The absence of a statistically significant peak at f<sub>orb</sub> in the power spectrum of properly corrected clock comparison data, after reaching the required integration time and accounting for all known systematics, would directly contradict the core mechanism of the discrete substrate framework.
 
 ## 3. Prerequisites
 
-### 3.1 Hardware Requirements
-- Access to atomic clock comparison data between ground and space clocks
-- **Preferred data sources**:
-  - NASA GRACE mission clock data
-  - GPS satellite clock residuals
-  - Galileo navigation system timing data
-  - Other LEO satellite missions with precision timing
+### 3.1 Data Requirements
+- **Type**: Time series of fractional frequency residuals (y(t)) from a comparison between a ground clock (G) and a space clock (S).
+- **Source**: Existing or future missions with high-precision clocks, such as:
+    - **ACES (Atomic Clock Ensemble in Space)** on the ISS (operational ~2026-2027)
+    - GPS/Galileo navigation satellite clock residuals
+    - Dedicated future missions with optical clocks in space
+- **Duration**: **Minimum of 6 months** of continuous or near-continuous data is recommended to allow sufficient integration for signal emergence above the 1/f noise floor.
+- **Quality**: Data must have undergone standard relativistic corrections (Special and General Relativity).
 
 ### 3.2 Software Requirements
 - Python 3.8 or higher
-- Required packages:
-  ```bash
-  pip install numpy matplotlib scipy
-  ```
-
-### 3.3 Data Requirements
-- Time series of clock comparison residuals (ground vs. space)
-- Minimum duration: 24 hours (preferably multiple days)
-- Sampling rate: ≥ 0.1 Hz (higher preferred)
-- Time synchronization accuracy: ≤ 10⁻¹² seconds
+- Required packages: `numpy`, `matplotlib`, `scipy`
+    ```bash
+    pip install numpy matplotlib scipy
+    ```
 
 ## 4. Validation Procedure
 
-### Step 1: Reproduce Simulation Baseline
+### Step 1: Understand the Simulation Baseline (Contextual)
+The repository contains `substrate_sim.py`, which simulates the **cosmological evolution** of the dynamic precision horizon and entropy increase. While it does not generate the 1.7e-4 Hz signal itself, it validates the foundational axioms (finite information, minimal scale, intrinsic symmetry breaking) that lead to the prediction. Running it provides essential context for the geometric origin of irreversibility.
 
-**Objective**: Establish the theoretical baseline using provided simulation code.
+> **Note on Atomic Clock Simulation Code**: The specific scripts (`clock_comparison.py`, `power_spectrum.py`) referenced in the paper for generating the 1.7e-4 Hz signal are part of the complete validation suite. They are archived with the paper's DOI and will be released publicly to coincide with the analysis of ACES mission data. This protocol describes the method to validate the prediction using **real experimental data**.
 
-```bash
-# Clone repository
-git clone [repository-url]
-cd [repository-directory]
+### Step 2: Prepare Your Experimental Data
+1.  Obtain the fractional frequency residual time series `y(t)` from your chosen mission.
+2.  Ensure all standard relativistic corrections have been applied.
+3.  Format the data as a 1D NumPy array of residuals with a corresponding time vector (or uniform sampling rate).
 
-# Run clock comparison simulation
-python clock_comparison.py
+### Step 3: Compute the Power Spectral Density (PSD)
+Use Welch's method or another appropriate spectral estimation technique to compute the PSD of `y(t)`.
 
-# Generate power spectrum
-python power_spectrum.py
-```
-
-**Expected Output**:
-- `clock_residuals.npy`: Simulated residual time series
-- `power_spectrum.png`: Power spectral density plot
-- Console output showing peak detection at 1.7e-4 Hz
-
-**Verification Checkpoints**:
-- [ ] Simulation completes without errors
-- [ ] Peak detected at frequency: 1.7e-04 Hz ± 1%
-- [ ] Signal-to-noise ratio > 10
-- [ ] Residual amplitude in range 10⁻²⁰ to 10⁻¹⁸ seconds
-
-### Step 2: Prepare Experimental Data
-
-**Objective**: Process your experimental clock comparison data into the required format.
-
-#### Data Format Requirements:
-- **File format**: NumPy array (.npy) or CSV
-- **Array structure**: 1D array of time residuals in seconds
-- **Time alignment**: Uniform sampling intervals
-- **Duration**: Minimum 86400 samples (24 hours at 1 Hz)
-
-#### Data Preprocessing:
+**Example Analysis Script (`analyze_residuals.py`):**
 ```python
-import numpy as np
-
-# Load your experimental data
-# Replace with your actual data loading method
-experimental_residuals = np.load('your_clock_residuals.npy')
-
-# Ensure data meets requirements
-assert len(experimental_residuals) >= 86400, "Insufficient data duration"
-assert np.all(np.isfinite(experimental_residuals)), "Data contains NaN/Inf values"
-
-# Save in standard format
-np.save('experimental_residuals.npy', experimental_residuals)
-```
-
-### Step 3: Analyze Experimental Power Spectrum
-
-**Objective**: Compute power spectral density of your experimental residuals.
-
-#### Modified Analysis Script:
-```python
-# Create analysis_experimental.py
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
 
-# Load experimental data
-residuals = np.load('experimental_residuals.npy')
-sampling_rate = 1.0  # Adjust based on your actual sampling rate
+# --- USER INPUT ---
+# Load your experimental residual data (y(t))
+time, y_residuals = np.loadtxt('your_residual_data.txt', unpack=True)
+sampling_rate = 1.0 / np.mean(np.diff(time)) # Calculate from your time vector
 
-# Compute power spectral density
+# Define the target frequency and region of interest (ROI)
+target_freq = 1.7e-4 # Hz
+roi_min, roi_max = 1e-5, 1e-3 # Hz
+
+# --- ANALYSIS ---
+# Compute Power Spectral Density
 frequencies, psd = signal.welch(
-    residuals, 
+    y_residuals,
     fs=sampling_rate,
-    nperseg=min(8192, len(residuals)//2),
+    nperseg=min(16384, len(y_residuals)//4), # Adjust segment length as needed
+    noverlap=min(8192, len(y_residuals)//8),
     scaling='density'
 )
 
-# Focus on region of interest (1e-5 to 1e-3 Hz)
-roi_mask = (frequencies >= 1e-5) & (frequencies <= 1e-3)
-target_freq = 1.7e-4
+# Focus on the Region of Interest
+roi_mask = (frequencies >= roi_min) & (frequencies <= roi_max)
+f_roi, psd_roi = frequencies[roi_mask], psd[roi_mask]
 
-# Find peak near target frequency
-freq_window = (frequencies >= 1.5e-4) & (frequencies <= 1.9e-4)
-peak_idx = np.argmax(psd[freq_window])
-peak_freq = frequencies[freq_window][peak_idx]
-peak_psd = psd[freq_window][peak_idx]
+# Find the peak within a window around the target frequency
+window_mask = (frequencies >= 1.5e-4) & (frequencies <= 1.9e-4)
+if np.any(window_mask):
+    peak_idx = np.argmax(psd[window_mask])
+    detected_freq = frequencies[window_mask][peak_idx]
+    peak_psd = psd[window_mask][peak_idx]
+else:
+    detected_freq, peak_psd = None, None
 
-print(f"Experimental peak detected at: {peak_freq:.2e} Hz")
-print(f"Peak PSD value: {peak_psd:.2e}")
-print(f"Target frequency: {target_freq:.2e} Hz")
+# --- OUTPUT ---
+print(f"Target Frequency: {target_freq:.2e} Hz")
+print(f"Detected Peak: {detected_freq:.2e} Hz")
+if detected_freq:
+    print(f"Relative Deviation: {abs(detected_freq - target_freq)/target_freq:.2%}")
 
-# Save results
-np.savez('experimental_analysis.npz', 
-         frequencies=frequencies, 
-         psd=psd,
-         peak_freq=peak_freq,
-         peak_psd=peak_psd)
-```
-
-Run the analysis:
-```bash
-python analysis_experimental.py
-```
-
-### Step 4: Statistical Significance Testing
-
-**Objective**: Determine if the detected peak is statistically significant.
-
-#### Significance Criteria:
-1. **Frequency Match**: |f_detected - 1.7e-4| / 1.7e-4 ≤ 0.1 (within 10%)
-2. **Signal-to-Noise Ratio**: SNR ≥ 3
-3. **Statistical Confidence**: p-value ≤ 0.01
-
-#### SNR Calculation:
-```python
-# Calculate noise floor (median of PSD in surrounding region)
-noise_region = (frequencies >= 1e-4) & (frequencies <= 3e-4)
-noise_floor = np.median(psd[noise_region])
-
-# Calculate SNR
-snr = peak_psd / noise_floor
-print(f"Signal-to-Noise Ratio: {snr:.2f}")
-
-# Statistical significance (approximate)
-from scipy.stats import chi2
-degrees_of_freedom = 2  # For Welch's method with typical parameters
-p_value = 1 - chi2.cdf(peak_psd / noise_floor, degrees_of_freedom)
-print(f"Statistical p-value: {p_value:.2e}")
-```
-
-### Step 5: Comparison with Simulation
-
-**Objective**: Quantitatively compare experimental results with simulation predictions.
-
-#### Comparison Metrics:
-- **Frequency deviation**: Δf = |f_exp - f_sim| / f_sim
-- **Amplitude ratio**: A_ratio = A_exp / A_sim
-- **Spectral shape similarity**: Correlation coefficient in frequency window
-
-#### Comparison Script:
-```python
-# Load simulation results
-sim_data = np.load('simulation_results.npz')  # From power_spectrum.py
-sim_frequencies = sim_data['frequencies']
-sim_psd = sim_data['psd']
-
-# Interpolate simulation to match experimental frequencies
-from scipy.interpolate import interp1d
-sim_interp = interp1d(sim_frequencies, sim_psd, bounds_error=False, fill_value=0)
-sim_psd_interp = sim_interp(frequencies)
-
-# Calculate comparison metrics
-freq_window_compare = (frequencies >= 1e-4) & (frequencies <= 3e-4)
-correlation = np.corrcoef(psd[freq_window_compare], 
-                         sim_psd_interp[freq_window_compare])[0,1]
-
-print(f"Frequency deviation: {abs(peak_freq - 1.7e-4) / 1.7e-4:.2%}")
-print(f"Spectral correlation: {correlation:.3f}")
-```
-
-## 5. Validation Criteria
-
-### 5.1 Primary Validation Criteria (All Required)
-
-| Criterion | Threshold | Method |
-|-----------|-----------|--------|
-| **Frequency Match** | Within 10% of 1.7e-4 Hz | Peak detection in PSD |
-| **Statistical Significance** | p-value ≤ 0.01 | Chi-square test |
-| **Signal Persistence** | Present in multiple days | Multi-day analysis |
-| **Reproducibility** | Consistent across datasets | Cross-validation |
-
-### 5.2 Secondary Validation Criteria (Supporting Evidence)
-
-| Criterion | Description | Weight |
-|-----------|-------------|--------|
-| **Amplitude Consistency** | Matches theoretical range (~10⁻¹⁹ s) | Medium |
-| **Orbital Correlation** | Signal strength correlates with orbital parameters | High |
-| **Relativistic Consistency** | Signal persists after full relativistic correction | High |
-| **Instrument Independence** | Observed across different clock types | Medium |
-
-## 6. Reporting Guidelines
-
-### 6.1 Required Information for Community Review
-
-When reporting your validation results, please include:
-
-1. **Experimental Setup**:
-   - Satellite mission name (e.g., GRACE, GPS, etc.)
-   - Clock types used (ground and space)
-   - Data collection period and duration
-   - Sampling rate and data quality metrics
-
-2. **Analysis Results**:
-   - Detected peak frequency and amplitude
-   - Statistical significance measures (SNR, p-value)
-   - Power spectrum plot (log-log scale, 1e-5 to 1e-3 Hz)
-   - Comparison with simulation baseline
-
-3. **Data Availability**:
-   - Raw residual time series (if permitted)
-   - Processed PSD data
-   - Analysis scripts used
-
-### 6.2 Submission Format
-
-Submit your validation report as a GitHub issue or pull request with the following structure:
-
-```
-## Validation Report: [Mission Name]
-
-### Experimental Setup
-- **Mission**: [Name]
-- **Duration**: [Start date] to [End date]
-- **Clock Types**: [Ground clock type] vs [Space clock type]
-- **Sampling Rate**: [Rate] Hz
-- **Data Quality**: [Brief description]
-
-### Results
-- **Detected Frequency**: [Value] Hz (target: 1.7e-4 Hz)
-- **Frequency Deviation**: [Percentage]%
-- **SNR**: [Value]
-- **p-value**: [Value]
-- **Amplitude**: [Value] seconds
-
-### Conclusion
-- [ ] Signal detected within tolerance
-- [ ] Statistically significant
-- [ ] Reproducible across dataset
-- **Overall Assessment**: [Pass/Fail/Inconclusive]
-
-### Supporting Files
-- [power_spectrum_[mission].png]
-- [validation_data_[mission].npz]
-- [analysis_script_[mission].py]
-```
-
-## 7. Troubleshooting Common Issues
-
-### 7.1 No Peak Detected at Target Frequency
-
-**Possible Causes**:
-- Insufficient data duration (< 24 hours)
-- Low sampling rate (< 0.1 Hz)
-- High noise levels masking the signal
-- Incorrect relativistic corrections applied
-
-**Solutions**:
-- Extend data collection period
-- Use higher-quality clock data
-- Apply additional noise filtering (carefully)
-- Verify relativistic correction implementation
-
-### 7.2 Peak Detected but Low Statistical Significance
-
-**Possible Causes**:
-- Short data segments
-- Non-stationary noise characteristics
-- Insufficient averaging in PSD calculation
-
-**Solutions**:
-- Use longer continuous data segments
-- Apply appropriate windowing functions
-- Increase overlap in Welch's method
-- Consider multi-taper spectral estimation
-
-### 7.3 Frequency Mismatch (>10% deviation)
-
-**Possible Causes**:
-- Different orbital altitude than assumed
-- Eccentric orbit effects
-- Data processing artifacts
-
-**Solutions**:
-- Calculate expected frequency based on actual orbital parameters
-- Account for orbital eccentricity
-- Verify data preprocessing steps
-
-## 8. Expected Timeline
-
-| Phase | Duration | Deliverables |
-|-------|----------|--------------|
-| **Setup & Simulation** | 1-2 days | Baseline simulation results |
-| **Data Preparation** | 2-5 days | Processed experimental residuals |
-** 1-3天|功率谱与统计检验|
-** |1-2天|完整验证报告|
-| **社区评审** |进行中|同行反馈与验证|
-
-##9. 联系方式
-
-关于此验证协议的问题：
-- **作者**: 周景松
-- **邮箱**: myheast@gmail.com
-- **机构**：独立研究员
-
-##10. 版本信息
-
-- **协议版本**: 1.0
-- **最后更新**: 2026-04-25
-- **兼容代码版本**: v1.0+
-- **DOI**: 10.5281/zenodo.19537142
-
----
-
-**注**：此验证协议是一项由社区驱动的科学验证过程。所有贡献和发现均有助于推动我们对基础物理学的理解。
-```
+# Plot the result
+plt.figure(figsize=(10, 6))
+plt.loglog(frequencies, psd, label='Experimental PSD')
+plt.axvline(target_freq, color='red', linestyle='--', label=f'Target: {target_freq:.1e} Hz')
+if detected_freq:
+    plt.axvline(detected_freq, color='green', linestyle=':', label=f'Detected: {detected_freq:.1e} Hz')
+plt.xlim(roi_min, roi_max)
+plt.xlabel('Frequency (Hz)')
+plt.ylabel('Power Spectral Density')
+plt.title('Clock Comparison Residual Power Spectrum')
+plt.legend()
+plt.grid(True, which="both", ls="-")
+plt.savefig('experimental_psd.png', dpi=150)
+plt.show()
