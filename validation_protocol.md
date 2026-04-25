@@ -1,7 +1,7 @@
 
 ---
 
-### **完善后的 `validation_protocol.md`**
+### ** `验证协议.md`**
 
 ```markdown
 # 实验验证方案：第二定律的几何起源
