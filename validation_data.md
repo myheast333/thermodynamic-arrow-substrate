@@ -1,97 +1,81 @@
-# 📊 **validation_data.md**
+# 📊 Validation Data: Power Spectral Density Analysis
 
-```markdown
-# 验证数据：功率谱密度分析
+## Executive Summary
 
-## 实验结果摘要
+This document presents the **expected validation signature** of the Discrete Substrate framework as detailed in the paper "The Geometric Origin of the Second Law". The theoretical prediction is a distinct peak in the Power Spectral Density (PSD) at the orbital frequency of **1.7 × 10⁻⁴ Hz**.
 
-验证数据证实了离散底物理论的关键实验预测：在1.7×10⁻⁴赫兹的轨道频率处，功率谱密度出现一个明显的峰值。
+> **Important Note**: The image below is a **simulated reference** illustrating the *expected outcome* if the theory is correct. **Scientific confirmation requires detection of this signal in real experimental data from space-based atomic clock missions (e.g., ACES).**
 
-![功率谱密度验证数据](https://wanx.alicdn.com/wanx/100501912103/text_to_image_lite_v2/5dbee53dd224437c9107bf09f1f2ec6b_0_visibleWatermark.png)
+![Simulated Power Spectral Density showing the predicted 1.7e-4 Hz peak](https://wanx.alicdn.com/wanx/100501912103/text_to_image_lite_v2/5dbee53dd224437c9107bf09f1f2ec6b_0_visibleWatermark.png)
 
-## 数据解读
+## Data Interpretation
 
-### 观测到的关键特征：
-- **峰值频率**：1.7 × 10⁻⁴ Hz（以红色竖线标记）
-- **频率范围**：以对数刻度从1×10⁻⁵ Hz到1×10⁻³ Hz
-- **信号特征**：噪声底以上有明显峰值
-- **频谱形状**：平滑的功率谱密度曲线，具有特征性标志
+### Key Observed Features (in Simulation):
+- **Peak Frequency**: **1.7 × 10⁻⁴ Hz** (marked by a red dashed line).
+- **Frequency Range**: Logarithmic scale from **1×10⁻⁵ Hz to 1×10⁻³ Hz**, covering the Low Earth Orbit (LEO) regime.
+- **Signal Characteristic**: A clear, coherent peak rising significantly above the background noise floor.
+- **Spectral Shape**: A smooth PSD curve with the predicted signature.
 
-### 验证指标：
-- **频率匹配**：✓ 在预测的1.7e-4 Hz处完全匹配
-- **信号清晰度**: ✓ 在背景噪声之上呈现明显峰值
-- **统计显著性**: ✓ 高信噪比
-- **可重复性**: ✓ 与模拟预测一致
+### Validation Metrics (for Real Data):
+When analyzing real experimental data, the following criteria must be met for a successful validation:
+- **Frequency Match**: ✓ Detected peak within **1%** of the predicted 1.7e-4 Hz.
+- **Signal Clarity**: ✓ Peak is unambiguously visible above the noise floor.
+- **Statistical Significance**: ✓ High Signal-to-Noise Ratio (SNR ≥ 3) and p-value ≤ 0.01.
+- **Reproducibility**: ✓ Consistent with the theoretical prediction and persistent across data segments.
 
-## 技术规格
+## Technical Specifications
 
-### 绘图参数：
-- **X轴**：频率（Hz）——对数刻度
-- **Y轴**：功率谱密度（任意单位）——对数刻度
-- **频率范围**：10⁻⁵至10⁻³赫兹
-- **目标频率**：1.7 × 10⁻⁴ Hz（轨道频率）
-- **网格**：带有主刻度和次刻度的专业科学网格
+### Plot Parameters:
+- **X-axis**: Frequency (Hz) — **Logarithmic Scale**
+- **Y-axis**: Power Spectral Density (arbitrary units) — **Logarithmic Scale**
+- **Frequency Range**: 10⁻⁵ to 10⁻³ Hz
+- **Target Frequency**: 1.7 × 10⁻⁴ Hz (orbital frequency for ~90 min period)
+- **Grid**: Professional scientific grid with major and minor ticks for clarity.
 
-### Data Quality Indicators:
-- **噪声底限**：在整个频率范围内保持稳定的背景水平
-- **峰值锐度**：清晰的峰值，表明信号具有相干性
-- **Dynamic Range**: Sufficient to clearly distinguish signal from noise
-- **比例适宜**：对数-对数比例适用于宽频率范围
+### Data Quality Indicators (for Real Data):
+- **Noise Floor**: A stable and well-characterized background level across the band.
+- **Peak Sharpness**: A narrow, coherent peak indicating a deterministic signal source.
+- **Dynamic Range**: Sufficient to clearly resolve the signal from the noise.
+- **Scaling**: Log-log scaling is optimal for visualizing signals over wide frequency ranges.
 
-## 验证状态
+## Validation Status (of the Framework)
 
-✅ **主要验证标准已满足：**
-- [x] 检测到的频率与目标值相差不超过1%（1.7e-4 Hz）
-- [x] 信号在噪声水平之上具有统计学显著性
-- [x] 峰值形态与理论预测相符
-- [x] 数据质量足以进行科学分析
+✅ **The framework makes a clear, falsifiable prediction that meets all primary validation criteria outlined in `validation_protocol.md` once confirmed with real data:**
+- [ ] **Frequency Match**: Detected frequency matches target within 10% (to be confirmed with experiment).
+- [ ] **Statistical Significance**: Signal is statistically significant (to be confirmed with experiment).
+- [ ] **Persistence**: Signal is present in multiple independent data segments (to be confirmed with experiment).
+- [x] **Theoretical Consistency**: The simulated signature is fully consistent with the axioms of the discrete substrate.
 
-## 下一步
+## Next Steps for the Community
 
-### 针对实验实验室：
-1. 使用验证协议与您自己的数据进行比较
-2. 分析来自NASA GRACE或类似任务的残差
-3. 将发现结果提交至社区评审流程
-4. **贡献额外数据集**以加强验证
+### For Experimental Laboratories:
+1.  Apply the `validation_protocol.md` to your own high-precision clock comparison data.
+2.  Analyze residuals from missions like **ACES (Atomic Clock Ensemble in Space)**, GRACE-FO, or GNSS constellations.
+3.  Submit your findings through the community review process.
+4.  **Contribute additional datasets** to strengthen the collective validation effort.
 
-### 数据使用指南：
-- 此验证数据用作参考基准
-- 用于与实验结果进行对比
-- 如适用，请纳入验证报告中
-- 使用此数据时请参考原始手稿
+### Data Usage Guidelines:
+- This simulated validation data serves as a **reference benchmark**.
+- Use it to compare against your experimental results.
+- Include it in your validation reports for illustrative purposes, if applicable.
+- Always cite the original manuscript when using this data.
 
-## 相关文件
+## Expected Output Files
 
-运行完整验证流程时，您应生成：
+When you run a complete validation analysis on your experimental data, you should generate a set of files like the following:
+clock_residuals.npy # Time-domain fractional frequency residual data
+power_spectrum.png # Power Spectral Density plot (to be compared with the reference above)
+validation_analysis.npz # Archive containing all analysis results (frequencies, PSD, stats)
+experimental_comparison.pdf # Final report comparing your results to the theoretical prediction
 
-```
-clock_residuals.npy # 时域残差数据
-power_spectrum.png # 功率谱密度图（与上图类似）
-validation_analysis.npz # 完整分析结果
-experimental_comparison.pdf # 对比报告
-```
+## Citation
 
-## 引用要求
+Please cite the original paper if you use this validation data or its concepts in your work:
 
-在出版物或报告中使用此验证数据时，请引用：
-
-```
+```bibtex
 @article{zhou2026geometric,
-标题={热力学第二定律的几何起源：离散基底中的不可约剩余缺陷},
-作者={周景松},
-年={2026},
+  title={The Geometric Origin of the Second Law: Irreducible Informational Differences in a Discrete Substrate},
+  author={Zhou, Jingsong},
+  year={2026},
   doi={10.5281/zenodo.19537142}
 }
-```
-
-## 联系方式
-
-如有关于此验证数据或解读的问题：
-- **作者**: 周景松
-- **电子邮箱**: myheast@gmail.com
-- **机构**: 独立研究员
-
----
-
-**注意**：此验证数据代表了离散基质理论正确时的预期结果。要获得科学确认，必须利用真实卫星钟数据进行实验验证。
-```
