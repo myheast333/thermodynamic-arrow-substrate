@@ -35,7 +35,8 @@ def main():
     print("\n1. Loading residual data...")
     try:
         # 使用 pandas 读取，自动处理标题行
-        df = pd.read_csv('residual.txt', delim_whitespace=True, comment='#')
+        # 修复：delim_whitespace 已弃用，改用 sep='\s+'
+        df = pd.read_csv('residual.txt', sep='\s+', comment='#', engine='python')
         
         # 提取数据
         time = df.iloc[:, 0].values
