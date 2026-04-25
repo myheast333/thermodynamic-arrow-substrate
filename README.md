@@ -52,7 +52,10 @@ To run the cosmic evolution simulator:
 1.  Ensure you have Python 3.8 or higher installed.
 2.  Install the required dependencies:
     ```bash
-    pip install numpy matplotlib
+    git clone https://github.com/myheast333/thermodynamic-arrow-substrate.git
+    cd thermodynamic-arrow-substrate
+    python -m venv substrate_env
+    pip install numpy numpy matplotlib pandas scipy
     ```
 3.  Execute the simulation:
     ```bash
