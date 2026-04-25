@@ -1,69 +1,26 @@
 #!/usr/bin/env python3
 """
-Clock comparison simulator for discrete substrate residual signal.
+Clock Comparison Simulation for Substrate Ontology Experimental Test (V5.5)
 
-Usage:
-    python clock_comparison.py --duration 6months
+Simulates the comparison between two clocks to detect the predicted
+1.7e-4 Hz signal from the discrete substrate framework.
 
-Note: This is a DEMONSTRATION code. For actual experimental validation using
-real satellite data (e.g., GRACE, ACES), known relativistic effects MUST be
-subtracted BEFORE searching for the orbital-frequency residual.
-See `validation_protocol.md` for the full preprocessing protocol.
+Author: Jingsong Zhou
+Based on: "The Geometric Origin of the Second Law" (2026)
+DOI: 10.5281/zenodo.19537142
 """
 
 import numpy as np
 import argparse
 import sys
 
-# Physical constants
-PLANCK_TIME = 5.391e-44          # seconds (quantum of time)
-SPEED_OF_LIGHT = 2.998e8         # m/s
-ORBITAL_PERIOD = 5400.0          # 90 minutes in seconds
-ORBITAL_FREQ = 1.0 / ORBITAL_PERIOD  # ~1.85e-4 Hz (actual ~1.7e-4 with modulation)
-CLOCK_FREQ = 4.3e14              # Hz (typical optical clock, e.g., Sr-87)
-
-def parse_duration(duration_str):
-    """Convert '6months' to seconds."""
-    if duration_str.endswith('months'):
-        months = float(duration_str[:-6])
-        return months * 30 * 24 * 3600
-    elif duration_str.endswith('days'):
-        days = float(duration_str[:-4])
-        return days * 24 * 3600
-    elif duration_str.endswith('s'):
-        return float(duration_str[:-1])
-    else:
-        raise ValueError("Duration must be like '6months', '180days', or '1e7s'")
-
 def simulate_residual(duration_sec, sample_rate=1.0, include_relativistic_warning=True):
-    """
-    Generate simulated clock comparison residual y(t) = (nu_S - nu_G)/nu_G.
+    """Simulate clock comparison residual with substrate ontology signal"""
     
-    The residual contains:
-      - White frequency noise (flicker floor)
-      - 1/f noise (clock instability)
-      - A weak periodic signal at the orbital frequency (predicted by discrete substrate)
-    
-    Parameters
-    ----------
-    duration_sec : float
-        Total simulation time in seconds.
-    sample_rate : float
-        Sampling rate in Hz (default 1.0).
-    include_relativistic_warning : bool
-        If True, prints a critical warning about relativistic correction requirements.
-    
-    Returns
-    -------
-    t : ndarray
-        Time array.
-    residual : ndarray
-        Simulated residual signal.
-    """
     if include_relativistic_warning:
-        print("\n" + "="*70)
+        print("=" * 70)
         print("⚠️  CRITICAL NOTE FOR EXPERIMENTAL VALIDATION ⚠️")
-        print("="*70)
+        print("=" * 70)
         print("This simulation does NOT include known relativistic effects.")
         print("In a real experiment with satellite clock data, you MUST:")
         print("  1. Subtract gravitational redshift (Earth's potential)")
@@ -71,59 +28,75 @@ def simulate_residual(duration_sec, sample_rate=1.0, include_relativistic_warnin
         print("  3. Correct for orbital velocity time dilation")
         print("  4. THEN analyze residuals for the 1.7e-4 Hz signal")
         print("See 'validation_protocol.md' for detailed step-by-step protocol.")
-        print("="*70 + "\n")
-
+        print("=" * 70)
+        print()
+    
+    # Simulation parameters
     n_samples = int(duration_sec * sample_rate)
-    t = np.linspace(0, duration_sec, n_samples)
     
-    # Orbital modulation (predicted signal)
-    # Amplitude estimate: tau_P / tau_clock ~ 5.4e-44 / 2.3e-15 ~ 2.3e-29
-    # For numerical stability, we scale it up for demonstration and note actual scale.
-    theoretical_amplitude = PLANCK_TIME * CLOCK_FREQ  # ~2.3e-29
-    # In simulation, we use a normalized amplitude for visibility; actual detection requires long integration.
-    sim_amplitude = 1e-10  # Placeholder for code demonstration only
+    # Time array
+    t = np.linspace(0, duration_sec, n_samples, dtype=np.float64)
     
-    orbital_signal = sim_amplitude * np.sin(2 * np.pi * ORBITAL_FREQ * t)
+    # Theoretical signal parameters (V5.5)
+    # Orbital frequency for ~90 minute orbit: f = 1/(90*60) ≈ 1.85e-4 Hz
+    # Adjusted to 1.7e-4 Hz for specific orbital configuration
+    signal_freq = 1.7e-4  # Hz
     
-    # Noise components (physically motivated)
-    white_noise = np.random.normal(0, 1e-18, n_samples)          # white frequency noise
-    flicker_noise = np.cumsum(np.random.normal(0, 1e-19, n_samples)) * (1 / sample_rate)  # 1/f
+    # Theoretical amplitude (extremely small, 2.32e-29 seconds)
+    theoretical_amplitude = 2.32e-29
     
-    residual = orbital_signal + white_noise + flicker_noise
+    # For demonstration purposes, use larger amplitude to be visible
+    # In real experiment, this would be at the noise floor
+    demonstration_amplitude = 1.0e-10
     
-    # Save to file for power spectrum analysis
-    np.savetxt('residual.txt', np.column_stack((t, residual)), 
-               header='time(s) residual', comments='')
+    # Generate signal (using demonstration amplitude)
+    signal = demonstration_amplitude * np.sin(2 * np.pi * signal_freq * t)
     
-    print(f"Simulated {n_samples} samples over {duration_sec/86400:.1f} days.")
+    # Add small noise (white noise)
+    noise_amplitude = 5.0e-11
+    noise = noise_amplitude * np.random.randn(n_samples)
+    
+    # Total residual
+    residual = signal + noise
+    
+    print(f"Simulated {n_samples:,} samples over {duration_sec/86400:.1f} days.")
     print(f"Theoretical signal amplitude: {theoretical_amplitude:.2e}")
-    print(f"Simulation amplitude (for demonstration): {sim_amplitude:.2e}")
-    print("Residual saved to residual.txt")
-    print("\nTo analyze the power spectrum, run:")
-    print("  python -c \"import numpy as np; data=np.loadtxt('residual.txt'); freq=np.fft.rfftfreq(len(data), d=1.0); spec=np.abs(np.fft.rfft(data[:,1]))**2; idx=np.argmax(spec[1:])+1; print(f'Peak frequency: {freq[idx]:.3e} Hz')\"")
+    print(f"Simulation amplitude (for demonstration): {demonstration_amplitude:.2e}")
     
-    return t, residual
+    # Save to .npy format (FASTEST - takes 2-3 seconds)
+    data = np.column_stack((t, residual))
+    np.save('residual.npy', data)
+    print(f"Residual saved to residual.npy (binary format, {data.nbytes/1e6:.1f} MB)")
+    
+    # Also save small text sample for inspection (1000 rows only)
+    sample_size = 1000
+    sample_data = data[:sample_size]
+    np.savetxt('residual_sample.txt', sample_data, 
+               header='time(s) residual', 
+               comments='',
+               fmt='%.18e %.18e')
+    print(f"Sample saved to residual_sample.txt ({sample_size} rows)")
+    
+    print(f"\nTo analyze the power spectrum, run:")
+    print(f"  python power_spectrum.py")
+    
+    return data
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='Simulate atomic clock comparison residual for discrete substrate theory.',
-        epilog='Example: python clock_comparison.py --duration 180days --sample-rate 0.1'
-    )
-    parser.add_argument('--duration', type=str, default='6months',
-                        help='Simulation duration (e.g., 6months, 180days, 1e7s)')
+    parser = argparse.ArgumentParser(description='Clock Comparison Simulation')
+    parser.add_argument('--duration', type=float, default=180.0,
+                        help='Simulation duration in days (default: 180.0)')
     parser.add_argument('--sample-rate', type=float, default=1.0,
-                        help='Sampling rate in Hz (default 1 Hz)')
+                        help='Sampling rate in Hz (default: 1.0)')
     parser.add_argument('--no-warning', action='store_true',
-                        help='Suppress the relativistic correction warning')
+                        help='Suppress relativistic warning message')
+    
     args = parser.parse_args()
     
-    try:
-        duration_sec = parse_duration(args.duration)
-    except ValueError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+    duration_sec = args.duration * 86400.0
     
-    simulate_residual(duration_sec, args.sample_rate, include_relativistic_warning=not args.no_warning)
+    simulate_residual(duration_sec, args.sample_rate, 
+                     include_relativistic_warning=not args.no_warning)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
