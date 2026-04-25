@@ -50,13 +50,18 @@ Together, these scripts allow anyone to reproduce the key experimental signature
 To run the full validation suite:
 
 1.  **Ensure you have Python 3.8 or higher installed.**
+ ```bash
+    git clone https://github.com/myheast333/thermodynamic-arrow-substrate.git
+    cd thermodynamic-arrow-substrate
+    python -m venv substrate_env
+   ```
 2.  **Install the required dependencies:**
     ```bash
-    pip install numpy matplotlib scipy
+    pip install numpy matplotlib pandas scipy
     ```
 3.  **Run the clock comparison simulation (default: 180 days):**
     ```bash
-    python clock_comparison.py
+     python clock_comparison.py
     ```
 4.  **Analyze the generated data:**
     ```bash
