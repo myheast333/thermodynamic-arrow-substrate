@@ -76,7 +76,7 @@ This will generate:
 To run the cosmic evolution simulator:
 ```bash
 python substrate_sim.py
-
+```
 This will generate cosmic_dynamic_precision.png.
 Key Features
 First-Principles Derivation: Provides a geometric, non-statistical origin for the Second Law.
