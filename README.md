@@ -1,144 +1,81 @@
-# 📄 **README.md 全文内容**
-
-```markdown
-![Validation Status](https://img.shields.io/badge/validation-ready_for_community_review-green)
-## How to Contribute
-1. Run `python clock_comparison.py` 
-2. Compare output with NASA GRACE data
-3. Report residuals at frequency 1.7e-4 Hz
-
-# Thermodynamic Arrow from a Discrete Substrate
+# The Geometric Origin of the Second Law: A Discrete Substrate Framework
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19537142.svg)](https://doi.org/10.5281/zenodo.19537142)
 
-This repository contains simulation code accompanying the manuscript:
+This repository provides the simulation code and validation protocol supporting the theoretical framework presented in the paper:
 
-**"The Geometric Origin of the Second Law of Thermodynamics: Irreducible Residual Deficits in a Discrete Substrate"**  
-*Jingsong Zhou (2026)*
+> **"The Geometric Origin of the Second Law: Irreducible Informational Differences in a Discrete Substrate"**  
+> Jingsong Zhou  
+> April 2026
 
-## Overview
+The work derives the Second Law of Thermodynamics from three minimal axioms of a discrete substrate, offering a first-principles explanation for the thermodynamic arrow of time without invoking special initial conditions.
 
-The code reproduces the key experimental prediction of the paper: a residual periodic signal in atomic clock comparisons at the orbital frequency of a satellite ($1.7 \times 10^{-4}$ Hz), arising from the discrete sampling of the substrate's global refresh rate.
+## Core Theoretical Framework
+
+Our framework is built upon three foundational axioms:
+
+1.  **Finite Information**: Any finite spacetime region contains a finite amount of information.
+2.  **Minimal Scale**: Physical reality is composed of indivisible minimal units (Planck scale).
+3.  **Intrinsic Symmetry Breaking**: Continuous symmetries (e.g., rotation, translation) cannot be perfectly realized on a discrete substrate, leaving behind an irreducible **closure informational difference** (δ).
+
+From these axioms, we prove that entropy, defined as the macroscopic sum of accumulated informational differences (S = k<sub>B</sub>∑δ<sub>i</sub>), must increase monotonically (dS/dt ≥ 0). This is a *geometric necessity*, not a statistical contingency, resolving Loschmidt's reversibility paradox.
 
 ## Repository Contents
 
-| File | Description |
-| :--- | :--- |
-| `clock_comparison.py` | Simulates ground vs. space clock comparison and generates residual time series |
-| `power_spectrum.py` | Computes power spectral density of the residual and plots the result |
-| `validation_protocol.md` | Step-by-step guide for experimental labs to replicate the proposed test |
-| `substrate_sim.py` | (Optional) Discrete substrate evolution simulator for pedagogical validation |
+This repository contains two main components:
+
+### 1. Cosmic Evolution Simulator (`substrate_sim.py`)
+This script implements the **cosmological implications** of the discrete substrate framework, specifically simulating the growth of the **Dynamic Precision Horizon** D(t) = ⌊log<sub>b</sub>(t/τ<sub>min</sub>)⌋.
+
+- **Functionality**: It models the continuous decay of energy level differences (ΔE(t) ∝ 1/t) and the concurrent, monotonic increase of entropy (S(t) ∝ ln t) across cosmic history.
+- **Output**: Generates a comprehensive figure with 8 subplots that:
+    - Visualize the dynamic precision horizon K(t) vs. cosmic age.
+    - Demonstrate the continuous decay of ΔE(t).
+    - Verify the mathematical relation b<sup>-K(t)</sup> ≈ τ<sub>0</sub>/t.
+    - Provide three independent numerical verifications of the Second Law (thermal, information, and phase-space entropy).
+    - Resolve the "complexity paradox" by showing how increasing resolution enables the emergence of structure while total entropy still increases.
+
+This simulator serves as a powerful pedagogical and theoretical tool to explore the long-term, universe-scale consequences of the discrete substrate axioms.
+
+### 2. Atomic Clock Validation Protocol (`validation_protocol.md`)
+This document details the **experimental test** proposed in the paper to falsify the framework.
+
+- **Prediction**: High-precision comparisons between a ground-based atomic clock and a satellite-borne clock will reveal a residual periodic signal at the satellite's orbital frequency (**f<sub>orb</sub> ≈ 1.7 × 10<sup>-4</sup> Hz**).
+- **Protocol**: The protocol outlines the steps for data collection, spectral analysis, and noise modeling required to detect this signature, which arises from the intrinsic symmetry breaking of the discrete substrate during periodic motion.
+
+> **Note on Atomic Clock Simulation Code**: The paper references specific scripts (`clock_comparison.py`, `power_spectrum.py`) for generating the predicted 1.7e-4 Hz signal. These files are part of the complete validation suite but are not included in this initial release. The core theoretical engine (`substrate_sim.py`) and the experimental protocol (`validation_protocol.md`) are provided here to establish the foundation. The full atomic clock simulation package will be released in conjunction with the ACES mission data analysis timeline.
 
 ## Quick Start
 
-**Requirements:** Python 3.8+ with `numpy` and `matplotlib`.
+To run the cosmic evolution simulator:
 
-```bash
-pip install numpy matplotlib
-```
-
-**Run the simulation:**
-```bash
-python clock_comparison.py
-python power_spectrum.py
-```
+1.  Ensure you have Python 3.8 or higher installed.
+2.  Install the required dependencies:
+    ```bash
+    pip install numpy matplotlib
+    ```
+3.  Execute the simulation:
+    ```bash
+    python substrate_sim.py
+    ```
+    This will generate a high-resolution plot (`cosmic_dynamic_precision.png`) and print a detailed summary of the simulation results and key conclusions.
 
 ## Key Features
 
-### 1. Atomic Clock Comparison Simulation
-- Simulates ground-based vs. space-based atomic clocks
-- Models relativistic effects (special and general relativity)
-- Includes discrete substrate refresh rate effects
-- Generates realistic residual time series
-
-### 2. Power Spectrum Analysis
-- Computes power spectral density using Welch's method
-- Identifies the characteristic frequency at 1.7e-4 Hz
-- Compares with theoretical predictions
-- Produces publication-quality plots
-
-### 3. Experimental Validation Ready
-- Output format compatible with NASA GRACE data
-- Standardized residual reporting at 1.7e-4 Hz
-- Community review ready validation protocol
-- Reproducible experimental setup
-
-## Theoretical Background
-
-### Discrete Substrate Framework
-The model is based on a discrete substrate where:
-- Global refresh rate creates irreducible deficits
-- Orbital motion samples this refresh rate periodically
-- Results in measurable residual signals in precision timing
-
-### Predicted Signal Characteristics
-- **Frequency**: $1.7 \times 10^{-4}$ Hz (orbital frequency)
-- **Amplitude**: ~$10^{-19}$ seconds (relative time deviation)
-- **Periodicity**: Matches satellite orbital period (~97 minutes)
-- **Persistence**: Irreducible due to fundamental substrate discreteness
-
-## Validation Protocol
-
-The repository includes a comprehensive validation protocol that enables experimental laboratories to:
-
-1. **Replicate the simulation** with their own parameters
-2. **Compare with real data** from atomic clock networks
-3. **Analyze residuals** at the predicted frequency
-4. **Contribute findings** to the community review process
-
-## Expected Output
-
-When running the simulation, you should see:
-
-```
-Simulating clock comparison...
-Total simulation time: 86400.0 seconds (1.0 days)
-Orbital frequency: 1.7e-04 Hz
-Relativistic correction applied: Special + General Relativity
-Discrete substrate effect included
-Residual time series saved to 'clock_residuals.npy'
-
-Computing power spectrum...
-Peak detected at frequency: 1.7e-04 Hz
-Peak amplitude: 1.23e-19
-Signal-to-noise ratio: 15.7
-Power spectrum plot saved to 'power_spectrum.png'
-```
-
-## How to Validate Against Real Data
-
-1. **Obtain NASA GRACE or similar satellite clock data**
-2. **Extract time residuals between ground and space clocks**
-3. **Compute power spectrum of your residuals**
-4. **Look for peak at 1.7e-4 Hz**
-5. **Compare amplitude with simulation predictions**
-6. **Report findings to the community**
+*   **First-Principles Derivation**: Provides a geometric, non-statistical origin for the Second Law.
+*   **Falsifiable Prediction**: Offers a concrete, testable signature (1.7e-4 Hz peak) for experimental physics.
+*   **Paradox Resolution**: Naturally resolves Loschmidt's reversibility paradox.
+*   **Cosmological Consistency**: Links the thermodynamic arrow to a growing dynamic precision horizon, aligning with cosmic evolution.
+*   **Open & Reproducible**: All core simulation code is open-source and requires only standard scientific Python libraries.
 
 ## Citation
 
-如果您在研究中使用此代码，请引用：
+If you use this work in your research, please cite the original paper:
 
-```
-@article{zhou2026geometric,
-标题={热力学第二定律的几何起源：离散基底中的不可约剩余缺陷},
-作者=周景松,
-年={2026},
-
+```bibtex
+@article{Zhou2026GeometricOrigin,
+  title={The Geometric Origin of the Second Law: Irreducible Informational Differences in a Discrete Substrate},
+  author={Zhou, Jingsong},
+  journal={In Preparation for IPI Letters},
+  year={2026}
 }
-```
-
-##许可证
-
-MIT 许可证 - 请参阅[许可证(许可证)了解详情。
-
-##联系
-
-关于理论框架或实验验证的问题：
-- **作者**: 周景松
-- **邮箱**: myheast@gmail.com
-**：独立研究员
-
----
-
-**注意**：本仓库代表了具有可检验实验预测的前沿理论物理。社区验证对于科学进步至关重要！
-```
